@@ -204,7 +204,7 @@ new TransportValue[MAX_PLAYERS];
 
 new TaxiCallTime[MAX_PLAYERS];
 new TaxiAccepted[MAX_PLAYERS];
-new TaxiCall = 999;
+new TaxiCall[MAX_PLAYERS];
 
 new Lock[MAX_PLAYERS];
 
@@ -2947,7 +2947,7 @@ public OnPlayerConnect(playerid)
 
     CheckDelay[playerid] = 0;
 	Mobile[playerid] = -1;
-	TransportDuty[playerid] = -1;
+	TransportDuty[playerid] = 0;
 
     playerVariables[playerid][pLive] = 0;
 
@@ -2983,6 +2983,8 @@ public OnPlayerConnect(playerid)
     
     TransferOffer[playerid] = 999;
     TransferMoney[playerid] = 0;
+
+    TaxiCall[playerid] = -1;
 
 
     matsOffer[playerid] = -1;
@@ -3853,6 +3855,7 @@ public OnPlayerDisconnect(playerid, reason)
     
     playerdeath[playerid] = 0;
     LastPlayer[playerid] = -1;
+    TaxiCall[playerid] = -1;
 
 
 	playerVariables[playerid][pStatus] = 0;
@@ -7200,11 +7203,6 @@ public OnPlayerKeyStateChange(playerid, newkeys, oldkeys)
     }
     if((newkeys == KEY_SUBMISSION)&&(IsPlayerInAnyVehicle(playerid))&&(GetPlayerState(playerid)==PLAYER_STATE_DRIVER))
     {
-    	new vehicleid = GetPlayerVehicleID(playerid);
-		if(IsPlayerInVehicle(playerid, vehicleid) && GetPlayerVehicleSeat(playerid) == 0)
-		{
-			if(carVariables[vPersonal[vehicleid]][cInsurancePoints] == 0) return SS(playerid, COLOR_ERROR, "Nu poti folosi acest vehicul.", "Youn can't use that car.");
-		}
         Engine(playerid);
         return 1;
     }
@@ -7282,7 +7280,7 @@ public OnPlayerUpdate(playerid)
 	{
 	    new Float: slx, Float: sly, Float:slz;
 	    GetPlayerPos(playerid, slx, sly, slz);
-		SetPlayerPosEx(playerid, slx, sly, slz+5);
+		SetPlayerPosEx(playerid, slx, sly, slz+3);
 	    SetPlayerArmedWeapon(playerid, 0);
 		SS(playerid, COLOR_RED, "Nu poti folosi armele pe o masina!", "You can't use weapons while sitting on a car!");
 	}
@@ -13302,13 +13300,6 @@ CMD:light(playerid, params[])
 }
 CMD:engine(playerid, params[])
 {
-	new vehicleid = GetPlayerVehicleID(playerid);
-
-	if(IsPlayerInVehicle(playerid, vehicleid) && GetPlayerVehicleSeat(playerid) == 0)
-	{
-		if(carVariables[vPersonal[vehicleid]][cInsurancePoints] == 0) return SS(playerid, COLOR_ERROR, "Nu poti folosi acest vehicul.", "Youn can't use that car.");
-	}
-	
     Engine(playerid);
 	return 1;
 }
@@ -14045,9 +14036,6 @@ CMD:changepass(playerid, params[])
     ShowPlayerDialog(playerid, DIALOG_CHANGEPASS, DIALOG_STYLE_PASSWORD, "SERVER: Change Password", "Type your NEW password bellow!", "Change", "Cancel");
 	return 1;
 }
-
-//---------------------------------------------- Report system ----------------------------------------------------------------------------
-//---------------------------------------------- Report system ----------------------------------------------------------------------------
 
 //---------------------------------------------- Report system ----------------------------------------------------------------------------
 CMD:report(playerid, params[])
@@ -15515,17 +15503,7 @@ CMD:getjob(playerid, params[])
 			}
 		}
 	}
-	else
-	{
-		if(playerVariables[playerid][pLimba] == 1)
-		{
-			S(playerid, COLOR_WHITE, "Ai deja un job. Foloseste [/quitjob] pentru a renunta la job-ul actual.");
-  		}
-  		if(playerVariables[playerid][pLimba] == 2)
-		{
-			S(playerid, COLOR_WHITE, "You already have a job. Use [/quitjob] to quit your job.");
-  		}
-  	}
+	else return SS(playerid, -1, "Ai deja un job. Foloseste [/quitjob] pentru a renunta la job-ul actual.", "You already have a job. Use [/quitjob] to quit your job.");
 	return 1;
 }
 CMD:quitjob(playerid, params[])
@@ -17207,61 +17185,50 @@ CMD:accept(playerid, params[])
 		if(id == INVALID_PLAYER_ID) return S(playerid, COLOR_GREY, "Error: Player not connected.");
 		if(strcmp(x_job,"taxi",true) == 0)
         {
-      		if(TransportDuty[playerid] != 1) return S(playerid, COLOR_GREY, "Nu poti accepta apelul deoarece nu esti on-duty.");
+      		if(TransportDuty[playerid] != 1) return SS(playerid, COLOR_GREY, "Nu poti accepta apelul deoarece nu esti on-duty.", "You can't accept the call because you are not on-duty.");
 
 			new newcar = GetPlayerVehicleID(playerid);
 			if(vehicleVariables[newcar][vVehicleGroup] == 7)
 			{
-				if(GetPlayerState(playerid) == 2)
-				{
-					if(TaxiCall < 999)
- 					{
-		    			if(id == playerid) return S(playerid, COLOR_WHITE, "Nu te poti accepta pe tine insuti.");
-			            if(IsPlayerConnected(TaxiCall))
-		 				{
-
-							GetPlayerName(playerid, sendername, sizeof(sendername));
-       						GetPlayerName(TaxiCall, giveplayer, sizeof(giveplayer));
+				if(GetPlayerVehicleSeat(playerid) == 0)
+				{ 
+					if(TaxiCall[id] != id) return S(playerid, -1,"This player has not called taxi.");
+	    			if(id == playerid) return S(playerid, -1, "Nu te poti accepta pe tine insuti.");
 
 
-							if(playerVariables[id][pLimba] == 1)
-							{
-								format(string, sizeof(string), "Taximetristul %s ti-a acceptat apelul. Asteapta taxiul aici.", sendername);
-								S(id, COLOR_YELLOW, string);
-								S(id, COLOR_WHITE, "Daca nu mai ai nevoie de un taxi, foloseste /cancel taxi.");
-							}
-       						if(playerVariables[id][pLimba] == 2)
-							{
-								format(string, sizeof(string), "Taxi driver %s has accepted your call. Please wait here for the taxi.", sendername);
-								S(id, COLOR_YELLOW, string);
-								S(id, COLOR_WHITE, "If you don't need a taxi anymore, use /cancel taxi.");
-							}
-
-
-       						new Float: Distance = GetDistanceBetweenPlayers(playerid, id);
-
-							new str[256];
-
-							format(str, sizeof(str), "Taxi driver %s has accepted the call from %s. Distance: %.0fm", sendername, giveplayer, Distance);
-							SendToGroup(7, COLOR_TEAL, str);
-
-							JucatorCautat[playerid] = id;
-							new Float:X,Float:Y,Float:Z;
-							GetPlayerPos(id, X,Y,Z);
-							SetPlayerCheckpoint(playerid, X,Y,Z, 3.0);
-							pUseFind[playerid] = 1;
-
-
-
-							TaxiCallTime[playerid] = 1;
-							TaxiAccepted[playerid] = TaxiCall;
-							TaxiCall = 999;
-
-							return 1;
-						}
+					if(playerVariables[id][pLimba] == 1)
+					{
+						format(string, sizeof(string), "Taximetristul %s ti-a acceptat apelul. Asteapta taxiul aici.", N(playerid));
+						S(id, COLOR_YELLOW, string);
+						S(id, COLOR_WHITE, "Daca nu mai ai nevoie de un taxi, foloseste /cancel taxi.");
 					}
+					if(playerVariables[id][pLimba] == 2)
+					{
+						format(string, sizeof(string), "Taxi driver %s has accepted your call. Please wait here for the taxi.", N(playerid));
+						S(id, COLOR_YELLOW, string);
+						S(id, COLOR_WHITE, "If you don't need a taxi anymore, use /cancel taxi.");
+					}
+
+
+					new Float: Distance = GetDistanceBetweenPlayers(playerid, id), str[256];
+					new Float:X, Float:Y, Float:Z;
+
+					format(str, sizeof(str), "Taxi driver %s has accepted the call from %s. Distance: %.0fm", sendername, giveplayer, Distance);
+					SendToGroup(7, COLOR_TEAL, str);
+
+					JucatorCautat[playerid] = id;
+					GetPlayerPos(id, X,Y,Z);
+					SetPlayerCheckpoint(playerid, X,Y,Z, 3.0);
+					pUseFind[playerid] = 1;
+
+					TaxiCallTime[playerid] = 1;
+					TaxiAccepted[playerid] = TaxiCall[id];
+					TaxiCall[id] = -1;
+
+					return 1;
 				}
 			}
+			else return S(playerid,COLOR_GREY,"You are not in a taxi.");
 		}
 		if(strcmp(x_job,"refill",true) == 0)
         {
@@ -18885,7 +18852,7 @@ CMD:test2(playerid, params[])
 {
 	playerVariables[playerid][pCarKey1] = 0;
 	Update(playerid, pCarKey1x);
-     return 1;
+    return 1;
 }     
 
 
@@ -24904,6 +24871,34 @@ CMD:members(playerid, params[])
 
 
 //----------------------------------------------- Comenzi factiuni: --------------------------------------------------------------------------------------------
+CMD:getgun(playerid, params[])
+{
+    if(groupVariables[playerVariables[playerid][pGroup]][gGroupType] == 1)
+	{
+		if(IsPlayerConnected(playerid))
+		{
+			if(playerVariables[playerid][pLicentaArme] >= 1)
+			{
+				if(IsPlayerInRangeOfPoint(playerid, 100.0, groupVariables[1][gGroupInteriorPos][0], groupVariables[1][gGroupInteriorPos][1], groupVariables[1][gGroupInteriorPos][2]) || IsPlayerInRangeOfPoint(playerid, 100.0, groupVariables[2][gGroupInteriorPos][0], groupVariables[2][gGroupInteriorPos][1], groupVariables[2][gGroupInteriorPos][2]) || IsPlayerInRangeOfPoint(playerid, 100.0, 246.3094,75.6527,1003.6406))
+				{
+					new gunname[15];
+					if(sscanf(params, "s[15]", gunname)) return S(playerid, COLOR_GREY, SYNTAX_MESSAGE"/getgun [weapon name]");
+					{
+						if(strcmp(gunname,"deagle",true) == 0) { GivePlayerWeaponEx(playerid, 24, 500); } 
+						else if(strcmp(gunname,"m4",true) == 0) { GivePlayerWeaponEx(playerid, 31, 500); }
+						else if(strcmp(gunname,"shotgun",true) == 0) { GivePlayerWeaponEx(playerid, 25, 100); }
+						else if(strcmp(gunname,"mp5",true) == 0) { GivePlayerWeaponEx(playerid, 29, 500); }
+						else return S(playerid, COLOR_GREY, "Invalid weapon name!");	  
+					}
+				} 
+				else return S(playerid, -1, "You are not at the HQ.");	
+			}
+			else return S(playerid, -1, "You don't have a gun licence!");	
+		}
+	}
+	else return S(playerid, COLOR_GREY,"You are not a cop.");
+	return 1;
+}
 CMD:duty(playerid, params[])
 {
     if(groupVariables[playerVariables[playerid][pGroup]][gGroupType] == 1)
@@ -25410,26 +25405,32 @@ CMD:fare(playerid,params[])
 	{	
 		if(vehicleVariables[vehicleid][vVehicleGroup] == 7)
 		{
-			if(GetPlayerState(playerid) == 2)
+			if(GetPlayerVehicleSeat(playerid) == 0)
 			{
 				new price;
 				if(sscanf(params, "i", price)) return S(playerid, COLOR_GREY,"Syntax: {FFFFFF}/fare [price]");
+	
+				if(price > -1 && price <= 500)
 				{
-					if(TransportDuty[playerid] == -1)
+					if(price == 0 && TransportDuty[playerid] == 1)  
 					{
-						if(price < 1 || price > 500) return S(playerid, COLOR_GREY, "The fare price can be until 500$.");
-						else if(price == 0) return TaxiDrivers -= 1; TransportDuty[playerid] = -1; TransportValue[playerid] = 0;
+						TaxiDrivers -= 1;
+						TransportDuty[playerid] = 0;
+						TransportValue[playerid] = 0;
+						S(playerid, COLOR_GREY, "You are now off duty!");
+						return 1;
+					}
 
-						S(playerid, COLOR_WHITE, "To get off duty, use /fare 0!");
-
+					if(TransportDuty[playerid] == 0 && price > 0)
+					{
 						TaxiDrivers += 1; TransportDuty[playerid] = 1; TransportValue[playerid] = price;
 
-			    		format(string, sizeof(string), "* Taxi driver %s is now on duty ($%d). [/service taxi]", N(playerid), price);
-			    		SendClientMessageToAll(TEAM_GROVE_COLOR, string);
-			    			
-			    		
+		    			format(string, sizeof(string), "* Taxi driver %s is now on duty ($%d). [/service taxi]", N(playerid), price);
+		    			SendClientMessageToAll(TEAM_GROVE_COLOR, string);
+		    			S(playerid, COLOR_WHITE, "To get off duty, use /fare 0!");
 					}
 				}
+				else return S(playerid, COLOR_GREY, "You can't set a fare higher than $500."); 
 		    }
 		}
 		else return S(playerid,COLOR_GREY,"You are not in a taxi.");
@@ -25462,17 +25463,18 @@ CMD:service(playerid, params[])
 						{
 							new Float: Distance = GetDistanceBetweenPlayers(playerid, i);
 
-							format(szMessage, sizeof(szMessage), "%s has called for a taxi. Type /accept taxi %d to accept his call. Distance: %.0fm.", GetName(playerid), playerid, Distance);
+							format(szMessage, sizeof(szMessage), "%s has called for a taxi. Type /accept taxi %d to accept his call. Distance: %.0fm.", N(playerid), playerid, Distance);
 		     				S(i, COLOR_TEAL, szMessage);
 						}
 					}
 				}
 				playerVariables[playerid][pDeelayService] = 120;
 				S(playerid, COLOR_GREY, "You have called for a taxi. Please wait here!");
-	  			TaxiCall = playerid;
+	  			TaxiCall[playerid] = playerid;
 			}
 			else return S(playerid,COLOR_WHITE,"You have already called for a taxi.");
 		}
+		else return S(playerid, -1, "You can't call a taxi because you are in the taxi company.");
 	}
 	return 1;
 }
