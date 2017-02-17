@@ -139,6 +139,7 @@ new
 	PlayerText:farmwantedro[MAX_PLAYERS],
 	PlayerText:farmwanteden[MAX_PLAYERS],
 	PlayerText:farmtime[MAX_PLAYERS],
+	PlayerText:UndercoverText[MAX_PLAYERS],
 	LastBiz[MAX_PLAYERS],
 	IsPlayerAFK[MAX_PLAYERS],
 	Float:PlayerPosii[MAX_PLAYERS][6],
@@ -1003,6 +1004,7 @@ new TutorialTime[MAX_PLAYERS];
 #define pQuest2x            97
 #define pQuest2Valuex       98
 #define pQuest2Prinsx       99
+#define pHeadValuex         110
 
 
 #define pCarKey1x           100
@@ -3062,6 +3064,16 @@ public OnPlayerConnect(playerid)
 	PlayerTextDrawFont(playerid, TimeLeftWar1[playerid], 2);
 	PlayerTextDrawSetProportional(playerid, TimeLeftWar1[playerid], 1);
 
+	UndercoverText[playerid] = CreatePlayerTextDraw(playerid, 250.000000, 425.000000, "~r~you are undercover");
+	PlayerTextDrawBackgroundColor(playerid, UndercoverText[playerid], 255);
+	PlayerTextDrawFont(playerid, UndercoverText[playerid], 3);
+	PlayerTextDrawLetterSize(playerid, UndercoverText[playerid], 0.549999, 1.500000);
+	PlayerTextDrawColor(playerid, UndercoverText[playerid], -1);
+	PlayerTextDrawSetOutline(playerid, UndercoverText[playerid], 0);
+	PlayerTextDrawSetProportional(playerid, UndercoverText[playerid], 1);
+	PlayerTextDrawSetShadow(playerid, UndercoverText[playerid], 1);
+	PlayerTextDrawSetSelectable(playerid, UndercoverText[playerid], 0);
+
 	farmjob[playerid] = CreatePlayerTextDraw(playerid, 6.399997, 183.679962, "JOB");
 	PlayerTextDrawLetterSize(playerid, farmjob[playerid], 0.449999, 1.600000);
 	PlayerTextDrawAlignment(playerid, farmjob[playerid], 1);
@@ -3411,6 +3423,7 @@ public WhenPlayerLogin(playerid)
 			cache_get_field_content(0, "RespectPoints", tmp), playerVariables[playerid][pRespectPoints] = strval(tmp);
 			cache_get_field_content(0, "Warns", tmp), playerVariables[playerid][pWarns] = strval(tmp);
 			cache_get_field_content(0, "RobPoints", tmp), playerVariables[playerid][pRobPoints] = strval(tmp);
+			cache_get_field_content(0, "HeadValue", tmp), playerVariables[playerid][pHeadValue] = strval(tmp);
 			cache_get_field_content(0, "OreJucate", tmp), playerVariables[playerid][pOreJucate] = strval(tmp);
 			cache_get_field_content(0, "Seconds", result), playerVariables[playerid][pSeconds] = strval(result);
 			cache_get_field_content(0, "FactionPunish", tmp), playerVariables[playerid][pFactionPunish] = strval(tmp);
@@ -3499,6 +3512,7 @@ public WhenPlayerLogin(playerid)
             playerVariables[playerid][pRegistred] = 1;
             playerVariables[playerid][pWarns] = 0;
             playerVariables[playerid][pRobPoints] = 0;
+            playerVariables[playerid][pHeadValue] = 0;
             playerVariables[playerid][pRespectPoints] = 0;
             playerVariables[playerid][pAdminLevel] = 0;
             playerVariables[playerid][pTutorial] = 0;
@@ -3554,6 +3568,7 @@ public WhenPlayerLogin(playerid)
 			Update(playerid, pRegistredx);
 			Update(playerid, pWarnsx);
 			Update(playerid, pRobPointsx);
+			Update(playerid, pHeadValuex);
 			Update(playerid, pRespectPointsx);
 			Update(playerid, pAdminLevelx);
 			Update(playerid, pPrisonTimex);
@@ -3852,7 +3867,8 @@ public OnPlayerDisconnect(playerid, reason)
     StopAudioStreamForPlayer(playerid);
     
     PlayerTextDrawHide(playerid, TimeLeftWar1[playerid]);
-    
+    PlayerTextDrawHide(playerid, UndercoverText[playerid]);
+
     playerdeath[playerid] = 0;
     LastPlayer[playerid] = -1;
     TaxiCall[playerid] = -1;
@@ -3966,6 +3982,7 @@ public OnPlayerSpawn(playerid)
 
 	pRepairing[playerid] = 0;
 	playerdeath[playerid] = 0;
+	Undercover[playerid] = 0;
 
 
 
@@ -4663,74 +4680,89 @@ public OnPlayerText(playerid, text[])
 	{
 	    if(playerVariables[playerid][pAdminDuty] < 1)
 		{
-		 	if(playerVariables[playerid][pColor] == 0)
-		    {
-		        format(szMessage, sizeof(szMessage), "{FFFFFF}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 1)
-		    {
-		        format(szMessage, sizeof(szMessage), "{4890E7}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 2)
-		    {
-		        format(szMessage, sizeof(szMessage), "{FFFF00}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 3)
-		    {
-		        format(szMessage, sizeof(szMessage), "{17E81E}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 4)
-		    {
-		        format(szMessage, sizeof(szMessage), "{EA2685}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 5)
-		    {
-		        format(szMessage, sizeof(szMessage), "{777274}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 6)
-		    {
-		        format(szMessage, sizeof(szMessage), "{FF9E00}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 7)
-		    {
-		        format(szMessage, sizeof(szMessage), "{EE5DDB}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 8)
-		    {
-		        format(szMessage, sizeof(szMessage), "{6F00AB}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 9)
-		    {
-		        format(szMessage, sizeof(szMessage), "{4D8E14}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 100)
-		    {
-		        format(szMessage, sizeof(szMessage), "{F00000}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 101)
-		    {
-		        format(szMessage, sizeof(szMessage), "{AA0000}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    else if(playerVariables[playerid][pColor] == 102)
-		    {
-		        format(szMessage, sizeof(szMessage), "{FF3F3F}%s:{FFFFFF} %s", GetName(playerid), text);
-		    }
-		    nearByMessage(playerid, COLOR_WHITE, szMessage);
-			format(szMessage, sizeof(szMessage), "%s", text);
-
-			if(playerVariables[playerid][pAdminLevel] < 6)
+			if(Undercover[playerid] == 0)
 			{
-				SetPlayerChatBubble(playerid, text, 0xFFFFFFFF, 15.0, 10000);
-			}
+				if(playerVariables[playerid][pColor] == 0)
+			    {
+			        format(szMessage, sizeof(szMessage), "{FFFFFF}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 1)
+			    {
+			        format(szMessage, sizeof(szMessage), "{4890E7}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 2)
+			    {
+			        format(szMessage, sizeof(szMessage), "{FFFF00}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 3)
+			    {
+			        format(szMessage, sizeof(szMessage), "{17E81E}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 4)
+			    {
+			        format(szMessage, sizeof(szMessage), "{EA2685}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 5)
+			    {
+			        format(szMessage, sizeof(szMessage), "{777274}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 6)
+			    {
+			        format(szMessage, sizeof(szMessage), "{FF9E00}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 7)
+			    {
+			        format(szMessage, sizeof(szMessage), "{EE5DDB}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 8)
+			    {
+			        format(szMessage, sizeof(szMessage), "{6F00AB}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 9)
+			    {
+			        format(szMessage, sizeof(szMessage), "{4D8E14}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 100)
+			    {
+			        format(szMessage, sizeof(szMessage), "{F00000}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 101)
+			    {
+			        format(szMessage, sizeof(szMessage), "{AA0000}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+			    else if(playerVariables[playerid][pColor] == 102)
+			    {
+			        format(szMessage, sizeof(szMessage), "{FF3F3F}%s:{FFFFFF} %s", GetName(playerid), text);
+			    }
+		    	nearByMessage(playerid, COLOR_WHITE, szMessage);
+				format(szMessage, sizeof(szMessage), "%s", text);
+
+				if(playerVariables[playerid][pAdminLevel] < 6)
+				{
+					SetPlayerChatBubble(playerid, text, 0xFFFFFFFF, 15.0, 10000);
+				}
+				else
+				{
+					SetPlayerChatBubble(playerid, text, 0x9BE9DEFF, 15.0, 10000);
+				}
+				new string[256];
+		    	format(string,sizeof(string),"%s: %s", GetName(playerid), text);
+				chatlogs(string, COLOR_WHITE);
+				mysql_format(handle, szLargeString, sizeof(szLargeString), "INSERT INTO chat_logs (playerid, text, type) VALUES('%d', '%s', 'chat')", playerVariables[playerid][pID], string);
+				mysql_query(handle, szLargeString);
+			}	
 			else
 			{
-				SetPlayerChatBubble(playerid, text, 0x9BE9DEFF, 15.0, 10000);
-			}
-			new string[256];
-        	format(string,sizeof(string),"%s: %s", GetName(playerid), text);
-			chatlogs(string, COLOR_WHITE);
-			mysql_format(handle, szLargeString, sizeof(szLargeString), "INSERT INTO chat_logs (playerid, text, type) VALUES('%d', '%s', 'chat')", playerVariables[playerid][pID], string);
-			mysql_query(handle, szLargeString);
+			    new string2[256];
+				format(string2, sizeof(string2), "Unknown: {FFFFFF}%s", text);
+				nearByMessage(playerid, -1, string2);
+
+				new string[256];
+		    	format(string,sizeof(string),"%s: %s", GetName(playerid), text);
+				chatlogs(string, COLOR_WHITE);
+				mysql_format(handle, szLargeString, sizeof(szLargeString), "INSERT INTO chat_logs (playerid, text, type) VALUES('%d', '%s', 'undercover')", playerVariables[playerid][pID], string);
+				mysql_query(handle, szLargeString);
+			}	
 		}
 		else
 		{
@@ -6835,7 +6867,13 @@ public OnPlayerInteriorChange(playerid, newinteriorid, oldinteriorid)
 	    printf("[debug] OnPlayerInteriorChange(%d, %d, %d)", playerid, newinteriorid, oldinteriorid);
 	#endif
 
-
+	if(Undercover[playerid] == 1)
+	{
+		foreach(Player, i)
+		{
+			ShowPlayerNameTagForPlayer(i, playerid, 0);
+		}
+	}
 	return 1;
 }
 
@@ -7428,6 +7466,7 @@ public OnPlayerUpdate(playerid)
 
 public OnPlayerStreamIn(playerid, forplayerid)
 {
+	if(Undercover[playerid] == 1) ShowPlayerNameTagForPlayer(forplayerid, playerid, 0);
 	return 1;
 }
 
@@ -11624,6 +11663,14 @@ public globalPlayerLoop()
 
     for(new i = 0; i < MAX_PLAYERS; i ++)
 	{
+		if(Undercover[i] == 1)
+		{
+		    PlayerTextDrawShow(i, UndercoverText[i]);
+		}
+		else
+		{
+		    PlayerTextDrawHide(i, UndercoverText[i]);
+		}
 	 
         if(playerVariables[i][pAdminLevel] >= 1)
 		{
@@ -12174,6 +12221,11 @@ public Update(playerid, type)
 				case pRobPointsx:
 				{
 					format(var, sizeof(var), "UPDATE `players` SET `RobPoints`='%d' WHERE `username`='%s'", playerVariables[playerid][pRobPoints], playerName);
+					mysql_query(handle ,var);
+				}
+				case pHeadValuex:
+				{
+					format(var, sizeof(var), "UPDATE `players` SET `HeadValue`='%d' WHERE `username`='%s'", playerVariables[playerid][pHeadValue], playerName);
 					mysql_query(handle ,var);
 				}
 				case pOreJucatex:
@@ -25085,7 +25137,37 @@ CMD:order(playerid, params[])
 		}
 		else return S(playerid, COLOR_WHITE, "Poti cumpara o arma doar din HQ.");
 	}
-	else return S(playerid, COLOR_GREY, "Aceasta comanda poate fi folosita doar de mafioti!");
+	else if(playerVariables[playerid][pGroup] == 4)
+	{
+		if(playerVariables[playerid][pLicentaArme] == 0) return S(playerid, -1,"You don't have gun license.");
+	    if(IsPlayerInRangeOfPoint(playerid, 100.0, groupVariables[playerVariables[playerid][pGroup]][gGroupInteriorPos][0], groupVariables[playerVariables[playerid][pGroup]][gGroupInteriorPos][1], groupVariables[playerVariables[playerid][pGroup]][gGroupInteriorPos][2]))
+		{
+			new amount;
+			if(sscanf(params, "d", amount))
+			{
+				S(playerid, -1, SYNTAX_MESSAGE"/order [item]");
+				S(playerid, COLOR_GREY, "Order 1: Silenced 9mm, Sniper, Knife. Order 2: Sniper ammo");
+				return 1;
+			}
+
+			if(amount == 1)
+			{
+				GivePlayerWeaponEx(playerid, 23, 50);
+				GivePlayerWeaponEx(playerid, 4, 1);
+				GivePlayerWeaponEx(playerid, 34, 10);
+			}
+			else if(amount == 2)
+			{
+				GivePlayerWeaponEx(playerid, 34, 10);
+			}
+			else
+			{
+				S(playerid, COLOR_GREY,"Invalid order id.");
+			}
+		}
+		else return S(playerid, -1, "You are not at the HQ.");		
+	}	
+	else return S(playerid, COLOR_GREY, "Aceasta comanda poate fi folosita doar de mafioti si hitmani!");
 	return 1;
 }
 CMD:attack(playerid, params[])
@@ -25437,6 +25519,9 @@ CMD:fare(playerid,params[])
  	}
 	return 1;
 }
+
+
+
 CMD:service(playerid, params[])
 {
 	if(isnull(params))
@@ -25480,7 +25565,105 @@ CMD:service(playerid, params[])
 }
 
 
+//------------------------------------HTIMAN--------------------------------------
 
+CMD:contract(playerid,params[])
+{
+    if(IsPlayerConnected(playerid))
+   	{
+		new id, moneys, string[256];
+		if(playerVariables[playerid][pGroup] == 4) return S(playerid, COLOR_GREY, "You are part of the Agency.");
+		if(sscanf(params, "ui", id, moneys)) return S(playerid, COLOR_GREY, "Syntax: {FFFFFF}/contract [playerid] [money]");
+		if(moneys < 10000 || moneys > 10000000) return S(playerid, COLOR_GREY, "Contract money must not go over $1,000,000 or under $10.000.");
+		if(playerVariables[playerid][pLevel] < 2) return S(playerid, COLOR_GREY, "You must be level 2 to place a contract.");
+
+	    if(id != INVALID_PLAYER_ID)
+	    {
+			if(playerVariables[id][pAdminLevel] > 0 || playerVariables[id][pHelperLevel] > 0) return S(playerid,COLOR_WHITE,"Cannot place contracts on Admins/Helpers.");
+			if(playerVariables[id][pGroup] == 4) return S(playerid, COLOR_WHITE, "Cannot place contracts on the Agency.");
+            if(id == playerid) return S(playerid, COLOR_WHITE, "You can't place a contract on yourself.");
+		    if(groupVariables[playerVariables[id][pGroup]][gGroupType] == 1 && moneys < 100000) return S(playerid, COLOR_WHITE, "Only sums greater than $100,000 can be placed as a contract on cops.");
+
+			if(GetPlayerCash(playerid) >= moneys)
+			{
+				GivePlayerCash(playerid, -moneys);
+				playerVariables[id][pHeadValue] += moneys;
+				if(playerVariables[id][pHeadValue] == 0)
+				{
+					format(string, sizeof(string), "%s has placed a contract on %s.",N(playerid), N(id));
+					SendToGroup(4, COLOR_TEAL, string);
+				}
+				format(string, sizeof(string), "* You placed a contract on %s, for $%s.",N(id), NumberFormat(moneys));
+				S(playerid, COLOR_LIGHTBLUE, string);
+				Update(playerid, pCashx);
+				Update(id, pHeadValuex);
+			}
+			else return S(playerid, COLOR_GREY, "You don't have enough cash.");
+		}
+		else return S(playerid, COLOR_WHITE, "Error: Player not connected.");
+	}
+	return 1;
+}
+
+
+/*CMD:contracts(playerid, params[])
+{
+    if(IsPlayerConnected(playerid))
+    {
+        if(playerVariables[playerid][pGroup] == 4)
+		{
+		    new count1=0,count2=0,string[128];
+		    foreach(Player,i)
+		    {
+		        if(PlayerInfo[i][pHeadValue] != 0 && IsBot[i] == 0)
+		        {
+		            if(PlayerInfo[i][pSleeping] == 1)
+		            {
+		            	count1++;
+					}
+					count2++;
+				}
+			}
+			SendClientMessage(playerid, COLOR_TEAL, "[Contracts]");
+			format(string,sizeof(string),"Targets AFK/sleeping: %d",count1);
+			SendClientMessage(playerid, COLOR_WHITE, string);
+			format(string,sizeof(string),"Total targets: %d",count2);
+			SendClientMessage(playerid, COLOR_WHITE, string);
+		    SendClientMessage(playerid, COLOR_TEAL, "-------------------");
+		}
+	}
+	return 1;
+}
+*/
+CMD:undercover(playerid, params[])
+{
+    if(IsPlayerConnected(playerid)) 
+    {
+		if(playerVariables[playerid][pGroup] == 4 || playerVariables[playerid][pAdminLevel] >= 6)
+		{
+			if(Undercover[playerid] == 0)
+			{
+		    	S(playerid, COLOR_YELLOW, "You are now undercover. No one can see your name.");
+		    	Undercover[playerid] = 1;
+      			foreach(Player, i)
+     			{
+      				ShowPlayerNameTagForPlayer(i, playerid, 0);
+           		}
+			}
+			else
+			{
+		    	S(playerid, COLOR_YELLOW, "You are not undercover anymore. Anyone can see your name.");
+		    	Undercover[playerid] = 0;
+				foreach(Player, i)
+     			{
+      				ShowPlayerNameTagForPlayer(i, playerid, 1);
+           		}
+			}
+ 		}
+ 		else return S(playerid, COLOR_GREY, "You are not a hitman.");
+	}
+	return 1;
+}
 
 
 
